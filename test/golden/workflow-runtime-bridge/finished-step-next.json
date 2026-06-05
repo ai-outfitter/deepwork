@@ -1,0 +1,42 @@
+{
+  "ok": true,
+  "result": {
+    "status": "next_step",
+    "feedback": null,
+    "begin_step": {
+      "session_id": "runtime-golden-session",
+      "step_id": "finalize",
+      "project_root": "<PROJECT>",
+      "job_dir": "<PROJECT>/.deepwork/jobs/runtime_job",
+      "step_expected_outputs": [
+        {
+          "name": "final",
+          "type": "string",
+          "description": "Final text produced by the second step",
+          "required": true,
+          "syntax_for_finished_step_tool": "string value"
+        }
+      ],
+      "step_inputs": [
+        {
+          "name": "draft",
+          "type": "string",
+          "description": "Draft text produced by the first step",
+          "value": "draft value",
+          "required": true
+        }
+      ],
+      "step_instructions": "## Inputs\n\n- **draft** (required): draft value\n\nCreate final text from the draft.\n",
+      "common_job_info": "Shared runtime fixture context."
+    },
+    "summary": null,
+    "all_outputs": null,
+    "post_workflow_instructions": null,
+    "stack": [
+      {
+        "workflow": "runtime_job/full",
+        "step": "finalize"
+      }
+    ]
+  }
+}

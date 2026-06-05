@@ -1,0 +1,32 @@
+name: runtime_job
+summary: Runtime fixture job for workflow bridge tests
+step_arguments:
+  - name: seed
+    description: Seed input for the workflow
+    type: string
+  - name: draft
+    description: Draft text produced by the first step
+    type: string
+  - name: final
+    description: Final text produced by the second step
+    type: string
+workflows:
+  full:
+    summary: Run two simple text steps
+    common_job_info_provided_to_all_steps_at_runtime: Shared runtime fixture context.
+    post_workflow_instructions: Workflow fixture complete.
+    steps:
+      - name: draft
+        instructions: |
+          Create draft text from the seed input.
+        inputs:
+          seed: {}
+        outputs:
+          draft: {}
+      - name: finalize
+        instructions: |
+          Create final text from the draft.
+        inputs:
+          draft: {}
+        outputs:
+          final: {}

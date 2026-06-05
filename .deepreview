@@ -1,0 +1,33 @@
+docs_sync_for_code_changes:
+  description: "Check whether DeepWork documentation for the standalone Pi package needs updates after code changes."
+  lifecycle:
+    cadence: pull_request
+  match:
+    include:
+      - "src/**/*.ts"
+      - "extensions/**/*.ts"
+      - "test/**/*.ts"
+      - "*.ts"
+      - "*.js"
+      - "*.mjs"
+    exclude:
+      - "node_modules/**"
+      - "coverage/**"
+      - "dist/**"
+  review:
+    strategy: matches_together
+    additional_context:
+      all_changed_filenames: true
+    reference_files:
+      - path: "README.md"
+        description: "DeepWork standalone Pi package documentation"
+      - path: "docs/README_REVIEWS.md"
+        description: "DeepWork Reviews documentation"
+      - path: "docs/native-bridge.md"
+        description: "Native bridge documentation"
+      - path: "skills/README.md"
+        description: "Packaged skill documentation index"
+    instructions: |
+      Code changed in the standalone DeepWork Pi package. Review the changed files and decide whether documentation should also be updated.
+
+      Documentation files to consider include `README.md`, files under `docs/`, and relevant skill or prompt documentation. Flag a finding if the code changes add, remove, rename, or materially change user-facing behavior, native tools, command behavior, event integration, review behavior, workflow semantics, schemas, configuration, setup, validation, or packaged skills/prompts but the relevant documentation was not updated. Do not require documentation changes for purely internal refactors, test-only maintenance, or behavior-preserving cleanup.

@@ -1,0 +1,65 @@
+# DeepWork Job Specification Template
+#
+# This template shows the structure of a job.yml file.
+# Replace placeholders in [brackets] with actual values.
+
+name: [job_name]
+summary: "[Brief one-line summary of what this job accomplishes - max 200 chars]"
+
+step_arguments:
+  - name: [argument_name]
+    description: "[What this argument represents]"
+    type: file_path  # or "string"
+    # Optional: review block (same format as .deepreview rules)
+    # review:
+    #   strategy: individual  # or "matches_together"
+    #   instructions: |
+    #     Evaluate the output against these criteria:
+    #     - [Criterion]: [What to check]
+    # Optional: json_schema for file_path outputs
+    # json_schema:
+    #   type: object
+    #   properties: ...
+
+workflows:
+  [workflow_name]:
+    summary: "[What this workflow accomplishes]"
+    common_job_info_provided_to_all_steps_at_runtime: |
+      [Common context and information shared across all steps at runtime.
+
+      This should include:
+      - What problem this workflow solves
+      - Key terminology and conventions
+      - Constraints or guidelines that apply to every step]
+    steps:
+      - name: [step_name]
+        instructions: |
+          [Inline step instructions go here.
+          All instructions are inlined directly - no separate instruction files.]
+        inputs:
+          [argument_name]:
+            required: true  # or false
+        outputs:
+          [argument_name]:
+            required: true
+            # Optional: step-specific review (supplements step_argument review)
+            # review:
+            #   strategy: individual
+            #   instructions: |
+            #     [Review criteria for this specific step's output]
+        # Optional: process requirements using RFC 2119 keywords
+        # process_requirements:
+        #   "[Requirement Name]": "[Statement using MUST/SHOULD/MAY keywords]"
+
+      - name: [another_step]
+        instructions: |
+          [Instructions for the next step]
+        inputs:
+          [argument_name]:
+            required: true
+        outputs:
+          [another_argument]:
+            required: true
+    # Optional: instructions shown after workflow completes
+    # post_workflow_instructions: |
+    #   [Instructions to show the agent after all steps complete]

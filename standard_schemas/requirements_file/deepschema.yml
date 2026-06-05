@@ -1,0 +1,114 @@
+summary: "RFC 2119 requirements specification files."
+
+instructions: |
+  Requirements files define formal specifications using RFC 2119 keywords.
+  They follow the naming convention `REQ-NNN-<topic>.md` where NNN is a
+  zero-padded number.
+
+  Each file has:
+  - A `# REQ-NNN: Title` top-level heading matching the filename prefix.
+  - An `## Overview` section describing the subsystem.
+  - A `## Requirements` section containing one or more `### REQ-NNN.M: Title`
+    subsections, each with a numbered list of requirements.
+
+  Every requirement statement must be specific enough to be verifiable by an
+  automated test, DeepSchema, or DeepReview rule. Judgment-based validation
+  should be encoded in a DeepReview rule rather than treated as informal
+  standalone reviewer judgment. Vague requirements like "SHOULD be fast" or
+  "MUST be user-friendly" are not acceptable — they must include a concrete,
+  evaluable criterion.
+
+  Choose the validation mechanism that fits the requirement: deterministic
+  behavior and exact structured facts belong in tests or JSON Schema;
+  file-level semantic contracts belong in DeepSchemas; and broad
+  judgment-based policies belong in DeepReview rules. Do not validate
+  judgment-based policy with fragile keyword checks.
+
+  When adding new requirements:
+  - Assign the next sequential section number (REQ-NNN.M where M is next unused).
+  - Number requirements sequentially within each section (1, 2, 3...).
+  - Each requirement gets exactly one RFC 2119 keyword (MUST, SHOULD, MAY, etc.).
+
+  Requirement ID stability:
+  - Numbered requirement items are stable identities, not just list positions.
+  - Never change or reassign an existing requirement's number.
+  - Existing numbered items should only change when that exact requirement truly
+    changed, such as adding a new allowed value to an existing list.
+  - New requirements always go at the end of their section.
+  - If a requirement is removed, keep its number and replace the body with
+    "REQUIREMENT REMOVED" so external references (tests, review rules) remain valid.
+  - Flag likely ID reassignment or semantic drift when a requirement appears to
+    reuse an existing ID or numbered item for an unrelated concept.
+
+matchers:
+  - "**/*REQ-*.md"
+
+requirements:
+  rfc-2119-keyword: >
+    Every numbered requirement statement MUST contain exactly one RFC 2119
+    keyword (MUST, MUST NOT, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RECOMMENDED,
+    MAY, OPTIONAL, REQUIRED). A requirement without a keyword is ambiguous and
+    MUST be flagged.
+
+  unique-section-ids: >
+    Each `### REQ-NNN.M:` section heading MUST have a unique ID within the
+    file. The NNN portion MUST match the filename's prefix (e.g., sections in
+    `REQ-001-application-shell.md` MUST all use `REQ-001.X`).
+
+  sequential-numbering: >
+    Requirements within each section MUST be sequentially numbered starting
+    from 1, with no gaps or duplicates. Section sub-IDs (the .M part) MUST
+    also be sequential within the file.
+
+  testability: >
+    Each requirement MUST be specific enough to be verifiable by an automated
+    test, DeepSchema, or DeepReview rule. Judgment-based validation MUST be
+    mediated by a DeepReview rule rather than treated as informal standalone
+    reviewer judgment. Requirements that cannot be objectively evaluated MUST be
+    rewritten with concrete criteria.
+
+  validation-mechanism-fit: >
+    Each requirement MUST have a clear and appropriate validation mechanism:
+    deterministic behavior, exact values, paths, generated arguments,
+    validation outcomes, and structured data belong in tests or JSON Schema;
+    file-level semantic contracts belong in DeepSchemas; and broad
+    judgment-based policies belong in DeepReview rules. Requirements whose
+    validation mechanism is unclear or obviously mismatched MUST be flagged.
+
+  no-fragile-judgment-validation: >
+    Requirements and validation notes MUST NOT use fragile keyword searches as
+    proof of judgment-based behavior. For example, a requirement about safety or
+    documentation quality MUST NOT be considered validated only because a test
+    checks that text includes a word such as `safe`.
+
+  overview-section: >
+    Requirements files MUST begin with a top-level heading matching the
+    filename prefix, followed by an `## Overview` section that describes the
+    subsystem's purpose and scope.
+
+  no-orphan-requirements: >
+    Every MUST or SHALL requirement MUST have a corresponding test, DeepSchema
+    requirement, or DeepReview rule that validates it. Requirements without any
+    validation mechanism SHOULD be flagged during review.
+
+  requirement-id-stability: >
+    Existing requirement numbers MUST NOT be changed, moved to different
+    numbers, reused for unrelated requirements, removed without a retained
+    `REQUIREMENT REMOVED` slot, or reassigned in a way that breaks stable
+    references. New requirements MUST be appended to the end of their section
+    with the next sequential number. If a requirement is fully removed, its
+    number MUST remain in place with the body replaced by "REQUIREMENT REMOVED"
+    so that all other IDs remain stable and external references do not break.
+
+  no-semantic-id-drift: >
+    Existing requirement IDs and numbered items MUST NOT drift to unrelated
+    concepts. A reviewer MUST flag likely ID reassignment when the new text
+    appears to reuse an existing ID or numbered item for a different concept
+    rather than changing the same durable requirement.
+
+verification_bash_command:
+  - "grep -nE '^[0-9]+\\.' \"$1\" | grep -vE 'MUST|SHALL|SHOULD|MAY|REQUIRED|RECOMMENDED|OPTIONAL|REQUIREMENT REMOVED' | { if read -r line; then echo \"FAIL: Requirement without RFC 2119 keyword: $line\"; exit 1; fi; }"
+
+references:
+  - path: "https://www.ietf.org/rfc/rfc2119.txt"
+    description: "RFC 2119 — Key words for use in RFCs to Indicate Requirement Levels."

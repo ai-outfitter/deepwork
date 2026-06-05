@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "result": {
+    "missingJob": {
+      "ok": false,
+      "name": "DeepWorkBridgeError",
+      "message": "Job not found: missing",
+      "error_type": "ToolError"
+    },
+    "noSessionFinish": {
+      "ok": false,
+      "name": "DeepWorkBridgeError",
+      "message": "No active workflow session. The finished_step tool reports completion of a step within a running workflow. If you want to resume a workflow, just start it again and call finished_step with quality_review_override_reason until you get back to your prior step.",
+      "error_type": "ToolError"
+    },
+    "unknownOutput": {
+      "ok": false,
+      "name": "DeepWorkBridgeError",
+      "message": "Unknown output names: bogus. Declared outputs: draft",
+      "error_type": "ToolError"
+    },
+    "forwardGoTo": {
+      "ok": false,
+      "name": "DeepWorkBridgeError",
+      "message": "Cannot go forward to step 'finalize' (index 1 > current 0). Use finished_step to advance forward.",
+      "error_type": "ToolError"
+    }
+  }
+}

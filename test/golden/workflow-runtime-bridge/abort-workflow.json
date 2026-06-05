@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "result": {
+    "aborted_workflow": "runtime_job/full",
+    "aborted_step": "draft",
+    "explanation": "golden abort",
+    "stack": [],
+    "resumed_workflow": null,
+    "resumed_step": null
+  }
+}

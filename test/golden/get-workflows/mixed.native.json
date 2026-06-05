@@ -1,0 +1,23 @@
+{
+  "jobs": [
+    {
+      "name": "fruits",
+      "summary": "Identify and classify fruits from a mixed list of items",
+      "workflows": [
+        {
+          "name": "full",
+          "summary": "Run the complete fruits identification and classification",
+          "how_to_invoke": "Call `deepwork_start_workflow` with job_name=\"fruits\" and workflow_name=\"full\", then follow the step instructions it returns."
+        }
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "job_name": "invalid_job",
+      "job_dir": "<PROJECT>/.deepwork/jobs/invalid_job",
+      "error": "Job definition validation failed: / must have required property 'summary'; / must have required property 'step_arguments'; / must have required property 'workflows'; / must NOT have additional properties; /name must match pattern \"^[a-z][a-z0-9_]*$\"\nThe invalid file is <PROJECT>/.deepwork/jobs/invalid_job/job.yml. If you edited that file this session, fix it directly. If you did not edit it, the project may need `/deepwork repair` to migrate legacy formats."
+    }
+  ],
+  "issue_detected": "\n\n---\n**IMPORTANT: ISSUE DETECTED.** Suggest repairing this immediately to the user.\n\n- **invalid_job**: Job definition validation failed: / must have required property 'summary'; / must have required property 'step_arguments'; / must have required property 'workflows'; / must NOT have additional properties; /name must match pattern \"^[a-z][a-z0-9_]*$\"\n  The invalid file is <PROJECT>/.deepwork/jobs/invalid_job/job.yml. If you edited that file this session, fix it directly. If you did not edit it, the project may need `/deepwork repair` to migrate legacy formats."
+}

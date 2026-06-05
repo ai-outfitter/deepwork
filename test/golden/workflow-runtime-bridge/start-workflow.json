@@ -1,0 +1,38 @@
+{
+  "ok": true,
+  "result": {
+    "important_note": "IMPORTANT: If, given the info on the workflow you now have, the user's request seems ambiguous and can be interpreted several ways, you MUST use AskUserQuestion to clarify their intent if that tool is available.",
+    "begin_step": {
+      "session_id": "runtime-golden-session",
+      "step_id": "draft",
+      "project_root": "<PROJECT>",
+      "job_dir": "<PROJECT>/.deepwork/jobs/runtime_job",
+      "step_expected_outputs": [
+        {
+          "name": "draft",
+          "type": "string",
+          "description": "Draft text produced by the first step",
+          "required": true,
+          "syntax_for_finished_step_tool": "string value"
+        }
+      ],
+      "step_inputs": [
+        {
+          "name": "seed",
+          "type": "string",
+          "description": "Seed input for the workflow",
+          "value": "alpha",
+          "required": true
+        }
+      ],
+      "step_instructions": "## Inputs\n\n- **seed** (required): alpha\n\nCreate draft text from the seed input.\n",
+      "common_job_info": "Shared runtime fixture context."
+    },
+    "stack": [
+      {
+        "workflow": "runtime_job/full",
+        "step": "draft"
+      }
+    ]
+  }
+}

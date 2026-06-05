@@ -1,0 +1,41 @@
+{
+  "ok": true,
+  "result": {
+    "begin_step": {
+      "session_id": "runtime-golden-session",
+      "step_id": "draft",
+      "project_root": "<PROJECT>",
+      "job_dir": "<PROJECT>/.deepwork/jobs/runtime_job",
+      "step_expected_outputs": [
+        {
+          "name": "draft",
+          "type": "string",
+          "description": "Draft text produced by the first step",
+          "required": true,
+          "syntax_for_finished_step_tool": "string value"
+        }
+      ],
+      "step_inputs": [
+        {
+          "name": "seed",
+          "type": "string",
+          "description": "Seed input for the workflow",
+          "value": null,
+          "required": true
+        }
+      ],
+      "step_instructions": "## Inputs\n\n- **seed** (required): Seed input for the workflow — *not yet available*\n\nCreate draft text from the seed input.\n",
+      "common_job_info": "Shared runtime fixture context."
+    },
+    "invalidated_steps": [
+      "draft",
+      "finalize"
+    ],
+    "stack": [
+      {
+        "workflow": "runtime_job/full",
+        "step": "draft"
+      }
+    ]
+  }
+}

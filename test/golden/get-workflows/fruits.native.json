@@ -1,0 +1,16 @@
+{
+  "jobs": [
+    {
+      "name": "fruits",
+      "summary": "Identify and classify fruits from a mixed list of items",
+      "workflows": [
+        {
+          "name": "full",
+          "summary": "Run the complete fruits identification and classification",
+          "how_to_invoke": "Call `deepwork_start_workflow` with job_name=\"fruits\" and workflow_name=\"full\", then follow the step instructions it returns."
+        }
+      ]
+    }
+  ],
+  "errors": []
+}

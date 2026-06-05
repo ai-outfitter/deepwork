@@ -1,0 +1,65 @@
+{
+  "name": "deepwork",
+  "version": "0.1.0",
+  "description": "Native DeepWork extension and skills for Pi CLI",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "deepwork",
+    "workflow",
+    "automation",
+    "quality-gates",
+    "reviews",
+    "deepschema"
+  ],
+  "license": "BSL-1.1",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/applepi-ai/deepwork.git"
+  },
+  "homepage": "https://github.com/applepi-ai/deepwork#readme",
+  "bugs": {
+    "url": "https://github.com/applepi-ai/deepwork/issues"
+  },
+  "type": "module",
+  "scripts": {
+    "check": "npm run check:package && npm run typecheck && npm run test",
+    "check:package": "node -e \"const fs=require('fs'); const pkg=JSON.parse(fs.readFileSync('package.json','utf8')); if (pkg.name !== 'deepwork') throw new Error('package name must be deepwork'); const required=['extensions','skills','prompts']; for (const key of required) { if (!pkg.pi?.[key]?.length) throw new Error('pi.'+key+' is required'); for (const p of pkg.pi[key]) { if (!fs.existsSync(p)) throw new Error('missing '+key+' path: '+p); } } console.log('package manifest OK');\"",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:update-golden": "UPDATE_GOLDEN=1 vitest run test/get-workflows.golden.test.ts",
+    "coverage": "vitest run --coverage"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "typebox": "*"
+  },
+  "dependencies": {
+    "ajv": "^8.20.0",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@earendil-works/pi-coding-agent": "^0.74.0",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.1.6",
+    "eslint": "^10.4.0",
+    "globals": "^17.6.0",
+    "typebox": "^1.1.38",
+    "typescript": "^5.8.0",
+    "typescript-eslint": "^8.60.0",
+    "vitest": "^4.1.6"
+  },
+  "pi": {
+    "extensions": [
+      "./src/index.ts"
+    ],
+    "skills": [
+      "./skills"
+    ],
+    "prompts": [
+      "./prompts"
+    ]
+  }
+}
