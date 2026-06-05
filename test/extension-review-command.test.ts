@@ -90,6 +90,7 @@ describe("/review command UX", () => {
     expect(content).toContain("re-run /review for the same scope");
   });
 
+  // Covers PI-REQ-003.11.2 and PI-REQ-003.11.3 by falling back when pi-subagents acknowledges but fails before launching async reviewers.
   it("falls back to sequential review tasks when async subagent launch reports an error after start", async () => {
     const harness = await loadHarness({ output: reviewOutput, subagentsFailed: "Async mode is unavailable." });
 
