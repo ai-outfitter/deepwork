@@ -90,6 +90,19 @@ describe("/review command UX", () => {
     expect(content).toContain("re-run /review for the same scope");
   });
 
+  // Covers PI-REQ-003.11.2 and PI-REQ-003.11.3 by falling back when pi-subagents acknowledges but fails before launching async reviewers.
+  it("falls back to sequential review tasks when async subagent launch reports an error after start", async () => {
+    const harness = await loadHarness({ output: reviewOutput, subagentsFailed: "Async mode is unavailable." });
+
+    await harness.commands.review.handler("", harness.ctx);
+
+    const content = harness.messages[0].message.content;
+    expect(content).toContain("DeepWork review task summary:");
+    expect(content).toContain("Pi subagents are not available");
+    expect(content).toContain("prompt_file: .deepwork/tmp/review_instructions/typescript.md");
+    expect(content).not.toContain("DeepWork review subagents were launched asynchronously");
+  });
+
   // Covers PI-REQ-001.12.4 and PI-REQ-003.11.1 for no-task review command status reporting.
   it("includes the requested scope when no review tasks are generated", async () => {
     const harness = await loadHarness({ output: "No matching DeepWork review rules." });
@@ -103,7 +116,7 @@ describe("/review command UX", () => {
   });
 });
 
-async function loadHarness(options: { output: string; subagentsStarted?: boolean }) {
+async function loadHarness(options: { output: string; subagentsStarted?: boolean; subagentsFailed?: string }) {
   vi.resetModules();
   const bridge = {
     abortWorkflow: vi.fn(),
@@ -175,8 +188,13 @@ async function loadHarness(options: { output: string; subagentsStarted?: boolean
       }),
       emit: vi.fn((eventName: string, payload: Record<string, unknown>) => {
         emitted.push({ event: eventName, data: payload });
-        if (eventName === "subagent:slash:request" && options.subagentsStarted) {
+        if (eventName === "subagent:slash:request" && (options.subagentsStarted || options.subagentsFailed)) {
           for (const handler of eventHandlers.get("subagent:slash:started") ?? []) handler({ requestId: payload.requestId });
+          for (const handler of eventHandlers.get("subagent:slash:response") ?? []) handler({
+            requestId: payload.requestId,
+            isError: Boolean(options.subagentsFailed),
+            ...(options.subagentsFailed ? { errorText: options.subagentsFailed } : {}),
+          });
         }
         for (const handler of eventHandlers.get(eventName) ?? []) handler(payload);
       }),
