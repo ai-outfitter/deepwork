@@ -21,6 +21,7 @@ export type ReviewRule = {
   allChangedFilenames: boolean;
   unchangedMatchingFiles: boolean;
   precomputedInfoBashCommand?: string;
+  reviewDepth?: "lightweight";
   sourceDir: string;
   sourceFile: string;
   sourceLine: number;
@@ -39,6 +40,7 @@ export type ReviewTaskNative = {
   inlineContent?: string;
   referenceFiles: ReferenceFile[];
   cacheInvalidatesOn: ReviewCacheInvalidation;
+  reviewDepth?: "lightweight";
 };
 
 export type DiscoveryError = {

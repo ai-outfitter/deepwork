@@ -86,6 +86,7 @@ async function parseRule(name: string, data: any, sourceDir: string, sourceFile:
     allChangedFilenames: additionalContext.all_changed_filenames ?? false,
     unchangedMatchingFiles: additionalContext.unchanged_matching_files ?? false,
     ...(precomputed ? { precomputedInfoBashCommand: resolve(sourceDir, precomputed) } : {}),
+    ...(review.review_depth ? { reviewDepth: review.review_depth as "lightweight" } : {}),
     sourceDir,
     sourceFile,
     sourceLine,

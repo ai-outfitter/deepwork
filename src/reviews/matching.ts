@@ -21,6 +21,7 @@ export function matchFilesToRules(changedFiles: string[], rules: ReviewRule[], p
       ...(allChangedFilenames ? { allChangedFilenames } : {}),
       ...(rule.precomputedInfoBashCommand ? { precomputedInfoBashCommand: rule.precomputedInfoBashCommand } : {}),
       cacheInvalidatesOn: rule.cacheInvalidatesOn,
+      ...(rule.reviewDepth ? { reviewDepth: rule.reviewDepth } : {}),
     };
 
     if (rule.strategy === "individual") {
