@@ -97,6 +97,8 @@ async function validateJsonSchemas(
 function buildQualityReviewTasks(input: QualityGateInput): QualityReviewTask[] {
   const tasks: QualityReviewTask[] = [];
   const sourceLocation = sourceLocationFor(input.job, input.projectRoot);
+  // inputContext is invariant across review blocks for this step — compute once.
+  const inputContext = buildInputContext(input.step, input.job, input.inputValues);
 
   for (const [outputName, outputRef] of Object.entries(input.step.outputs)) {
     const arg = input.job.step_arguments.find((item) => item.name === outputName);
@@ -112,8 +114,7 @@ function buildQualityReviewTasks(input: QualityGateInput): QualityReviewTask[] {
     reviewBlocks.forEach((reviewBlock, index) => {
       const suffix = outputRef.review && arg.review && index > 0 ? "_arg" : "";
       const ruleName = `step_${input.step.name}_output_${outputName}${suffix}`;
-      // Preamble is computed per-block so review_depth: lightweight can suppress Job Context.
-      const preamble = buildPreamble(input.step, input.job, input.workflow, input.inputValues, reviewBlock.review_depth);
+      const preamble = buildPreamble(input.workflow, inputContext, reviewBlock.review_depth);
       const instructions = preamble ? `${preamble}\n\n${reviewBlock.instructions}` : reviewBlock.instructions;
       const filesToReview = arg.type === "file_path" ? filePathValues(value) : [];
       const inlineContent = arg.type === "string" ? String(value) : undefined;
@@ -133,7 +134,7 @@ function buildQualityReviewTasks(input: QualityGateInput): QualityReviewTask[] {
     const outputFiles = collectOutputFilePaths(input.outputs, input.job);
     const ruleName = `step_${input.step.name}_process_quality`;
     // Process-requirements reviews always use standard depth — never suppress Job Context.
-    const preamble = buildPreamble(input.step, input.job, input.workflow, input.inputValues);
+    const preamble = buildPreamble(input.workflow, inputContext);
     const instructions = buildProcessRequirementsInstructions(input, preamble);
     tasks.push({
       reviewId: reviewId(ruleName, outputFiles, outputFiles.length === 0 ? input.workSummary : undefined, sourceLocation),
@@ -176,7 +177,7 @@ async function buildOutputFilePolicyTasks(input: QualityGateInput): Promise<Revi
 }
 
 function qualityGatePolicyInstructions(instructions: string, input: QualityGateInput): string {
-  const preamble = buildPreamble(input.step, input.job, input.workflow, input.inputValues);
+  const preamble = buildPreamble(input.workflow, buildInputContext(input.step, input.job, input.inputValues));
   const qualityContext = [
     `This review is being run as a DeepWork workflow quality gate for job '${input.job.name}', workflow '${input.workflow.name}', step '${input.step.name}'.`,
     input.workSummary ? `## Work Summary\n\n${input.workSummary}` : "",
@@ -259,13 +260,12 @@ function buildReviewGuidance(
   const exhaustCondition = REVIEWER_MAX_RETRIES === 1 ? "If the retry also returns" : `If all ${REVIEWER_MAX_RETRIES} retries return`;
   const totalAttempts = REVIEWER_MAX_RETRIES + 1;
 
-  return `Quality reviews are required before this step can advance.\n\n${taskSections}\n\n## How to Run Reviews\n\nFor each review task listed above, launch it as a Pi-native review task or read the prompt_file and follow the review instructions.\n\n## Handling Hung Reviewers\n\nA reviewer has **hung** when it completes with **0 tool uses** — a signal of API overload or a dropped connection. Hung reviewers must be retried; do **not** silently pass them.\n\n**Retry policy (max ${REVIEWER_MAX_RETRIES} ${retryWord} per reviewer)**:\n\n1. After each reviewer completes, check whether it made 0 tool uses and produced no substantive output.\n2. If both are true the reviewer hung. ${retryInstruction} by re-launching the same agent with the same prompt.\n   - If elapsed time was under ${REVIEWER_FAST_FAIL_SECONDS}s the reviewer fast-failed (never got an API response) — retry immediately.\n   - If elapsed time was ${REVIEWER_FAST_FAIL_SECONDS}s or more (slow-hang), the reviewer started but stalled — retry after a brief pause.\n3. ${exhaustCondition} 0 tool uses: call \`deepwork_mark_review_as_passed\` with the review_id. Then tell the user: "Review skipped after ${totalAttempts} failed attempt${totalAttempts === 1 ? "" : "s"} — manual review recommended for this step." Do **not** proceed without informing the user.\n\n## After Reviews\n\nFor any failing reviews where the reviewer produced actual findings: if you believe the issue is invalid, call \`deepwork_mark_review_as_passed\` on it. Otherwise, act on the feedback, fix the issues, and call \`deepwork_finished_step\` again.`;
+  return `Quality reviews are required before this step can advance.\n\n${taskSections}\n\n## How to Run Reviews\n\nFor each review task listed above, launch it as a Pi-native review task or read the prompt_file and follow the review instructions.\n\n## Handling Hung Reviewers\n\nA reviewer has **hung** when it completes with **0 tool uses** — a signal of API overload or a dropped connection. Hung reviewers must be retried; do **not** silently pass them.\n\n**Retry policy (max ${REVIEWER_MAX_RETRIES} ${retryWord} per reviewer)**:\n\n1. After each reviewer completes, check whether it made 0 tool uses and produced no substantive output.\n2. If both are true the reviewer hung. ${retryInstruction} by re-launching the same agent with the same prompt.\n   - If elapsed time was under ${REVIEWER_FAST_FAIL_SECONDS}s the reviewer fast-failed (never got an API response) — retry immediately.\n   - If elapsed time was ${REVIEWER_FAST_FAIL_SECONDS}s or more (slow-hang), the reviewer started but stalled — retry after a brief pause.\n3. ${exhaustCondition} 0 tool uses: **do not auto-pass.** Tell the user: "Reviewer hung after ${totalAttempts} failed attempt${totalAttempts === 1 ? "" : "s"} — manual review required before this step can advance." Stop and wait for the user to inspect and manually call \`deepwork_mark_review_as_passed\` if they choose to unblock.\n\n## After Reviews\n\nFor any failing reviews where the reviewer produced actual findings: if you believe the issue is invalid, call \`deepwork_mark_review_as_passed\` on it. Otherwise, act on the feedback, fix the issues, and call \`deepwork_finished_step\` again.`;
 }
 
-function buildPreamble(step: WorkflowStep, job: JobDefinition, workflow: Workflow, inputValues: Record<string, JsonValue>, reviewDepth?: string): string {
+function buildPreamble(workflow: Workflow, inputContext: string, reviewDepth?: "lightweight"): string {
   const parts: string[] = [];
   if (reviewDepth !== "lightweight" && workflow.common_job_info) parts.push(`## Job Context\n\n${workflow.common_job_info}`);
-  const inputContext = buildInputContext(step, job, inputValues);
   if (inputContext) parts.push(inputContext);
   return parts.join("\n\n");
 }

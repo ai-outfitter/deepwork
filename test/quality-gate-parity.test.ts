@@ -162,6 +162,11 @@ describe("native quality-gate parity coverage", () => {
     const promptFiles = promptFilesFromFeedback(feedback);
 
     expect(json(result).status).toBe("needs_work");
+    // Output review (first) is lightweight — Job Context must be absent
+    const outputPrompt = await readFile(promptFiles[0], "utf8");
+    expect(outputPrompt).not.toContain("## Job Context");
+    expect(outputPrompt).not.toContain("Shared context for all steps.");
+    // Process quality review is last — always standard depth
     const processPrompt = await readFile(promptFiles[promptFiles.length - 1], "utf8");
     expect(processPrompt).toContain("## Job Context");
     expect(processPrompt).toContain("Shared context for all steps.");
@@ -191,8 +196,9 @@ describe("native quality-gate parity coverage", () => {
     expect(feedback).toContain("0 tool uses");
     expect(feedback).toContain(`max ${REVIEWER_MAX_RETRIES}`);
     expect(feedback).toContain(`${REVIEWER_FAST_FAIL_SECONDS}s`);
-    expect(feedback).toContain("manual review recommended");
-    expect(feedback).toContain("tell the user");
+    expect(feedback).toContain("do not auto-pass");
+    expect(feedback).toContain("manual review required");
+    expect(feedback).not.toContain("call `deepwork_mark_review_as_passed`\` with the review_id. Then tell");
   });
 });
 
