@@ -3,6 +3,7 @@ export type ReviewBlock = {
   instructions: string;
   agent?: Record<string, string>;
   additional_context?: Record<string, boolean>;
+  review_depth?: "lightweight";
 };
 
 export type StepArgument = {
