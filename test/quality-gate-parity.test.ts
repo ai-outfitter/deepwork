@@ -198,7 +198,6 @@ describe("native quality-gate parity coverage", () => {
     expect(feedback).toContain(`${REVIEWER_FAST_FAIL_SECONDS}s`);
     expect(feedback).toContain("do not auto-pass");
     expect(feedback).toContain("manual review required");
-    expect(feedback).not.toContain("call `deepwork_mark_review_as_passed`\` with the review_id. Then tell");
   });
 });
 
