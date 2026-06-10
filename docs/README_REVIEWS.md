@@ -85,7 +85,7 @@ Fields:
 - `review.precomputed_info_for_reviewer_bash_command` — optional shell command whose stdout is added to the review prompt as precomputed context.
 - `review.reference_files` — optional files to inline into review prompts.
 - `review.additional_context` — optional flags for extra context.
-- `review.review_depth` — optional depth hint. Set to `lightweight` on job.yml review blocks to omit the workflow's `common_job_info` preamble from the reviewer's prompt, reducing token usage when the reviewed artifact is self-contained (e.g. screenshot visual quality checks). Step inputs are always included. Has no effect in `.deepreview` rules (those rules have no associated workflow).
+- `review.review_depth` — optional depth hint for **job.yml review blocks only**. Set to `lightweight` to omit the workflow's `common_job_info` preamble from the reviewer's prompt, reducing token usage when the reviewed artifact is self-contained (e.g. screenshot visual quality checks). Step inputs are always included. This field is not valid in `.deepreview` rules (they have no associated workflow) and the `.deepreview` schema rejects it.
 
 ## Instruction Files
 

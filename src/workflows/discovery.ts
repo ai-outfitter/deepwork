@@ -201,7 +201,7 @@ function parseReviewBlock(value: unknown): ReviewBlock {
     instructions: String(raw.instructions),
     ...(raw.agent ? { agent: raw.agent as Record<string, string> } : {}),
     ...(raw.additional_context ? { additional_context: raw.additional_context as Record<string, boolean> } : {}),
-    ...(raw.review_depth ? { review_depth: raw.review_depth as "lightweight" } : {}),
+    ...(raw.review_depth === "lightweight" ? { review_depth: "lightweight" as const } : {}),
   };
 }
 

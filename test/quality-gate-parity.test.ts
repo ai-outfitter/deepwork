@@ -198,6 +198,8 @@ describe("native quality-gate parity coverage", () => {
     expect(feedback).toContain(`${REVIEWER_FAST_FAIL_SECONDS}s`);
     expect(feedback).toContain("do not auto-pass");
     expect(feedback).toContain("manual review required");
+    // Guards against regressing to the old blanket guidance that told the agent to mark any passing review as passed.
+    expect(feedback).not.toContain("If a review passes, call `deepwork_mark_review_as_passed` with its review_id");
   });
 });
 
