@@ -14,6 +14,7 @@ The following paths are now first-pass native TypeScript:
 
 - workflow discovery/parsing and `deepwork_get_workflows`
 - workflow runtime/state/status for start, finish, abort, go-to-step, stack persistence, and active context restoration
+- session-job registration/retrieval through `deepwork_register_session_job` and `deepwork_get_session_job`, including same-session discovery for generated DeepPlan jobs
 - output validation and first-pass quality gates
 - `.deepreview` and DeepSchema-generated workflow quality gates for `file_path` outputs
 - review discovery/parsing/matching/git changed-file detection

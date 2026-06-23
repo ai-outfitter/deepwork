@@ -12,13 +12,25 @@ afterEach(() => {
 });
 
 describe("DeepWork extension tool handlers", () => {
-  // Covers PI-REQ-002.1.1 through PI-REQ-002.13.1 by executing the registered native tool surface.
+  // Covers PI-REQ-002.1.1 through PI-REQ-002.14.2 by executing the registered native tool surface.
   it("registers native DeepWork tools that delegate to bridge methods with session context", async () => {
     const harness = await loadHarness();
     const ctx = { cwd: "/project", sessionManager: { getSessionId: () => "session-1" } };
 
     await harness.tools.deepwork_get_workflows.execute("tool-1", {}, undefined, undefined, ctx);
     expect(harness.bridge.getWorkflows).toHaveBeenCalledWith({ cwd: "/project", sessionId: "session-1", agentId: undefined });
+
+    await harness.tools.deepwork_register_session_job.execute("tool-2a", { job_name: "j", job_definition_yaml: "name: j\n", session_id: "explicit", agent_id: "agent-1" }, undefined, undefined, ctx);
+    expect(harness.bridge.registerSessionJob).toHaveBeenCalledWith(
+      { job_name: "j", job_definition_yaml: "name: j\n", session_id: "explicit", agent_id: "agent-1" },
+      { cwd: "/project", sessionId: "explicit", agentId: "agent-1" },
+    );
+
+    await harness.tools.deepwork_get_session_job.execute("tool-2b", { job_name: "j", session_id: "explicit", agent_id: "agent-1" }, undefined, undefined, ctx);
+    expect(harness.bridge.getSessionJob).toHaveBeenCalledWith(
+      { job_name: "j", session_id: "explicit", agent_id: "agent-1" },
+      { cwd: "/project", sessionId: "explicit", agentId: "agent-1" },
+    );
 
     await harness.tools.deepwork_start_workflow.execute("tool-2", { goal: "g", job_name: "j", workflow_name: "w", session_id: "explicit", agent_id: "agent-1" }, undefined, undefined, ctx);
     expect(harness.bridge.startWorkflow).toHaveBeenCalledWith(
@@ -171,11 +183,13 @@ async function loadHarness(options: { reviewInstructions?: string; parsedTasks?:
     getConfiguredReviews: vi.fn(async () => ({ reviews: [] })),
     getNamedSchemas: vi.fn(async () => ({ schemas: [] })),
     getReviewInstructions: vi.fn(async () => options.reviewInstructions ?? "instructions"),
+    getSessionJob: vi.fn(async () => ({ job_name: "j" })),
     getWorkflows: vi.fn(async () => ({ jobs: [] })),
     goToStep: vi.fn(async () => ({ step: "define" })),
     hasApplicableReviews: vi.fn(),
     markReviewAsPassed: vi.fn(async () => ({ passed: true })),
     parseReviewTasks: vi.fn(() => options.parsedTasks ?? []),
+    registerSessionJob: vi.fn(async () => ({ status: "registered" })),
     runDeepSchemaWriteHook: vi.fn(),
     startWorkflow: vi.fn(async () => ({ started: true })),
   };

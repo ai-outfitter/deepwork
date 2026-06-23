@@ -13,6 +13,7 @@ import {
   startWorkflowNative,
   WorkflowRuntimeError,
 } from "./workflows/runtime.js";
+import { getSessionJobNative, registerSessionJobNative } from "./workflows/session-jobs.js";
 
 export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 export type JsonObject = { [key: string]: JsonValue };
@@ -179,7 +180,7 @@ export class DeepWorkBridgeError extends Error {
 }
 
 export async function getWorkflows(options: BridgeOptions): Promise<JsonValue> {
-  return getWorkflowsNative(options.cwd);
+  return getWorkflowsNative(options.cwd, { ...options, sessionId: options.sessionId ?? "default" });
 }
 
 export async function getWorkflowsFromPythonBridge(options: BridgeOptions): Promise<JsonValue> {
@@ -200,6 +201,14 @@ export async function abortWorkflow(params: JsonObject, options: BridgeOptions):
 
 export async function goToStep(params: JsonObject, options: BridgeOptions): Promise<JsonValue> {
   return callNativeWorkflow(() => goToStepNative(withIdentity(params, options), options));
+}
+
+export async function registerSessionJob(params: JsonObject, options: BridgeOptions): Promise<JsonValue> {
+  return registerSessionJobNative(withIdentity(params, options), options);
+}
+
+export async function getSessionJob(params: JsonObject, options: BridgeOptions): Promise<JsonValue> {
+  return getSessionJobNative(withIdentity(params, options), options);
 }
 
 export async function getReviewInstructions(params: JsonObject, options: BridgeOptions): Promise<string> {
@@ -400,10 +409,14 @@ function normalizeWorkflowInvocationText(value: JsonValue): JsonValue {
       workflowInfo.how_to_invoke = workflowInfo.how_to_invoke
         .replace(/mcp__plugin_deepwork_deepwork__start_workflow/g, "deepwork_start_workflow")
         .replace(/mcp__[^\s`]*__start_workflow/g, "deepwork_start_workflow")
+        .replace(/mcp__[^\s`]*__register_session_job/g, "deepwork_register_session_job")
+        .replace(/mcp__[^\s`]*__get_session_job/g, "deepwork_get_session_job")
         .replace(/(?<!deepwork_)start_workflow/g, "deepwork_start_workflow")
         .replace(/(?<!deepwork_)finished_step/g, "deepwork_finished_step")
         .replace(/(?<!deepwork_)abort_workflow/g, "deepwork_abort_workflow")
-        .replace(/(?<!deepwork_)go_to_step/g, "deepwork_go_to_step");
+        .replace(/(?<!deepwork_)go_to_step/g, "deepwork_go_to_step")
+        .replace(/(?<!deepwork_)register_session_job/g, "deepwork_register_session_job")
+        .replace(/(?<!deepwork_)get_session_job/g, "deepwork_get_session_job");
     }
   }
   return response;

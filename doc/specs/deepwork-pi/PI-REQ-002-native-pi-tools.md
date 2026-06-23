@@ -162,3 +162,18 @@ This requirement file was copied and adapted from `deep-work/doc/specs/deepwork/
 2. Tool names SHOULD match the direct DeepWork tool names currently exposed in Pi where practical.
 3. The package MAY provide compatibility aliases only when Pi supports aliases without ambiguity.
 4. Documentation MUST distinguish native Pi tools from MCP tools.
+
+### PI-REQ-002.14: Native Session Job Tools
+
+1. The extension MUST register a native Pi tool named `deepwork_register_session_job`.
+2. The extension MUST register a native Pi tool named `deepwork_get_session_job`.
+3. `deepwork_register_session_job` MUST accept `job_name`, `job_definition_yaml`, optional `session_id`, and optional `agent_id` parameters.
+4. `deepwork_register_session_job` MUST validate `job_name` against `^[a-z][a-z0-9_]*$`.
+5. `deepwork_register_session_job` MUST validate YAML syntax and the DeepWork job schema before reporting success.
+6. `deepwork_register_session_job` MUST write the submitted job file to session-scoped on-disk storage so validation failures remain inspectable.
+7. `deepwork_register_session_job` MUST require the YAML `name` field to match the registered `job_name`.
+8. `deepwork_get_session_job` MUST accept `job_name`, optional `session_id`, and optional `agent_id` parameters.
+9. `deepwork_get_session_job` MUST return the registered job YAML for the resolved Pi session.
+10. Session jobs MUST be discoverable by `deepwork_start_workflow`, `deepwork_finished_step`, `deepwork_abort_workflow`, `deepwork_go_to_step`, and `deepwork_get_workflows` for the same resolved Pi session.
+11. Session jobs MUST take priority over project-local, standard, and additional job folders with the same job name.
+12. A session job registered under one resolved `session_id` MUST NOT be discoverable under another resolved `session_id`.

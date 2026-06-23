@@ -11,11 +11,13 @@ import {
   getConfiguredReviews,
   getNamedSchemas,
   getReviewInstructions,
+  getSessionJob,
   getWorkflows,
   goToStep,
   hasApplicableReviews,
   markReviewAsPassed,
   parseReviewTasks,
+  registerSessionJob,
   runDeepSchemaWriteHook,
   startWorkflow,
   type JsonObject,
@@ -57,6 +59,35 @@ function registerDeepWorkTools(pi: ExtensionAPI, pendingSubagentReviewPasses: Ma
     parameters: Type.Object({}),
     async execute(_toolCallId, _params, _signal, _onUpdate, ctx) {
       return toolResult(await getWorkflows(bridgeOptions(ctx)));
+    },
+  }));
+
+  pi.registerTool(defineTool({
+    name: "deepwork_register_session_job",
+    label: "Register DeepWork Session Job",
+    description: "Register a transient DeepWork job definition scoped to the current Pi session.",
+    parameters: Type.Object({
+      job_name: Type.String({ description: "Session job name. Must match the job YAML name and ^[a-z][a-z0-9_]*$." }),
+      job_definition_yaml: Type.String({ description: "Complete DeepWork job.yml content to validate and register." }),
+      session_id: Type.Optional(Type.String({ description: "Optional DeepWork/Pi session ID. Defaults to the current Pi session." })),
+      agent_id: Type.Optional(Type.String({ description: "Optional agent/subagent ID." })),
+    }),
+    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+      return toolResult(await registerSessionJob(params as JsonObject, bridgeOptions(ctx, params)));
+    },
+  }));
+
+  pi.registerTool(defineTool({
+    name: "deepwork_get_session_job",
+    label: "Get DeepWork Session Job",
+    description: "Retrieve a transient DeepWork job definition registered in the current Pi session.",
+    parameters: Type.Object({
+      job_name: Type.String({ description: "Session job name." }),
+      session_id: Type.Optional(Type.String({ description: "Optional DeepWork/Pi session ID. Defaults to the current Pi session." })),
+      agent_id: Type.Optional(Type.String({ description: "Optional agent/subagent ID." })),
+    }),
+    async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
+      return toolResult(await getSessionJob(params as JsonObject, bridgeOptions(ctx, params)));
     },
   }));
 

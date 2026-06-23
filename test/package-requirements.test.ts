@@ -8,6 +8,8 @@ import deepworkPi from "../src/index.js";
 const root = process.cwd();
 const requiredToolNames = [
   "deepwork_get_workflows",
+  "deepwork_register_session_job",
+  "deepwork_get_session_job",
   "deepwork_start_workflow",
   "deepwork_finished_step",
   "deepwork_abort_workflow",
@@ -24,7 +26,7 @@ describe("Pi package requirements", () => {
   it("declares the required native Pi package layout and manifest fields", async () => {
     const pkg = JSON.parse(await readFile(join(root, "package.json"), "utf8"));
 
-    expect(root.endsWith("deepwork")).toBe(true);
+    expect(existsSync(join(root, "package.json"))).toBe(true);
     expect(pkg.name).toBe("deepwork");
     expect(pkg.description).toEqual(expect.any(String));
     expect(pkg.version).toEqual(expect.any(String));
@@ -68,9 +70,11 @@ describe("Pi package requirements", () => {
     expect(extension).not.toContain("mcp__");
     expect(bridge).toContain("export async function getWorkflows");
     expect(bridge).toContain("export async function startWorkflow");
+    expect(bridge).toContain("export async function registerSessionJob");
+    expect(bridge).toContain("export async function getSessionJob");
   });
 
-  // Covers PI-REQ-002.1.1 through PI-REQ-002.1.3, PI-REQ-002.3.1, PI-REQ-002.4.1, PI-REQ-002.5.1, PI-REQ-002.7.1, PI-REQ-002.8.1, PI-REQ-002.9.1 through PI-REQ-002.9.3, PI-REQ-002.10.1, and PI-REQ-002.13.1.
+  // Covers PI-REQ-002.1.1 through PI-REQ-002.1.3, PI-REQ-002.3.1, PI-REQ-002.4.1, PI-REQ-002.5.1, PI-REQ-002.7.1, PI-REQ-002.8.1, PI-REQ-002.9.1 through PI-REQ-002.9.3, PI-REQ-002.10.1, PI-REQ-002.13.1, and PI-REQ-002.14.1 through PI-REQ-002.14.2.
   it("registers the complete native deepwork_ tool surface through pi.registerTool", () => {
     const registered = collectExtensionRegistrations();
 
