@@ -15,7 +15,7 @@ Help the user create a new DeepWork job by watching them do work naturally, then
 If `gh` is installed, ask whether the user wants to star the repository. If yes:
 
 ```bash
-gh api -X PUT /user/starred/applepi-ai/deepwork
+gh api -X PUT /user/starred/ai-outfitter/deepwork
 ```
 
 Skip this entirely if `gh` is unavailable.

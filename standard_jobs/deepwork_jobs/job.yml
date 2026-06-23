@@ -2101,7 +2101,7 @@ workflows:
           For **sparse checkout**:
           ```bash
           git clone --sparse --filter=blob:none \
-            https://github.com/applepi-ai/deepwork.git .deepwork/upstream
+            https://github.com/ai-outfitter/deepwork.git .deepwork/upstream
           git -C .deepwork/upstream sparse-checkout set --cone library/jobs/
           ```
           Ensure `.deepwork/upstream/` is in `.gitignore`.

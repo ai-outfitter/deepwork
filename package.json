@@ -15,11 +15,11 @@
   "license": "BSL-1.1",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/applepi-ai/deepwork.git"
+    "url": "git+https://github.com/ai-outfitter/deepwork.git"
   },
-  "homepage": "https://github.com/applepi-ai/deepwork#readme",
+  "homepage": "https://github.com/ai-outfitter/deepwork#readme",
   "bugs": {
-    "url": "https://github.com/applepi-ai/deepwork/issues"
+    "url": "https://github.com/ai-outfitter/deepwork/issues"
   },
   "type": "module",
   "scripts": {

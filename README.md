@@ -9,7 +9,7 @@ This package is intentionally native to Pi: it does **not** require `.mcp.json`,
 From a Pi project, install the package with:
 
 ```bash
-pi install git:github.com/applepi-ai/deepwork
+pi install git:github.com/ai-outfitter/deepwork
 ```
 
 Then reload Pi resources if Pi is already running:
@@ -25,7 +25,7 @@ The package name is `deepwork`; it provides the native DeepWork extension and pa
 Clone this repository and install dependencies:
 
 ```bash
-git clone https://github.com/applepi-ai/deepwork.git
+git clone https://github.com/ai-outfitter/deepwork.git
 cd deepwork
 npm ci
 ```
@@ -43,6 +43,24 @@ npm run check:package
 npm run typecheck
 npm test
 ```
+
+## Releases
+
+DeepWork releases are managed with release-please. Use Conventional Commit messages
+(`feat:`, `fix:`, `docs:`, `chore:`) on merged PRs. After changes land on
+`main`, the Release Please workflow opens or updates a release PR. Merging that
+release PR updates `package.json`, `package-lock.json`, `CHANGELOG.md`, creates
+the GitHub release, and tags the version.
+
+Pi users who install from GitHub should reference the canonical repository:
+
+```bash
+pi install git:github.com/ai-outfitter/deepwork
+```
+
+If Pi is already running, restart Pi or reload resources after the profile or
+installed package source changes so the new native tools are available in the
+current session.
 
 ## Native Pi resources
 
@@ -92,7 +110,7 @@ These tools are registered with `pi.registerTool()` and do not call MCP tools or
 
 Implemented so far:
 
-- `package.json` with standalone Pi package metadata for `applepi-ai/deepwork`
+- `package.json` with standalone Pi package metadata for `ai-outfitter/deepwork`
 - `src/index.ts` Pi extension entry point
 - `extensions/index.ts` native Pi tool, command, and lifecycle registration
 - `src/bridge.ts` centralized compatibility bridge for operations not yet ported to TypeScript
