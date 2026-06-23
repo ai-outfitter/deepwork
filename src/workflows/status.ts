@@ -52,7 +52,7 @@ async function frameContext(projectRoot: string, frame: ActiveWorkflowFrame): Pr
   currentStepInstructions: string | null;
 }> {
   try {
-    const job = await getJob(projectRoot, frame.job_name);
+    const job = await getJob(projectRoot, frame.job_name, frame.session_id);
     const workflow = job.workflows[frame.workflow_name];
     const step = workflow?.steps[frame.current_step_index];
     return {
@@ -71,8 +71,8 @@ async function frameContext(projectRoot: string, frame: ActiveWorkflowFrame): Pr
   }
 }
 
-async function getJob(projectRoot: string, jobName: string): Promise<JobDefinition> {
-  for (const folder of await getJobFolders(projectRoot)) {
+async function getJob(projectRoot: string, jobName: string, sessionId?: string): Promise<JobDefinition> {
+  for (const folder of await getJobFolders(projectRoot, { sessionId })) {
     try {
       return await parseJobDefinition(join(folder, jobName));
     } catch (error) {

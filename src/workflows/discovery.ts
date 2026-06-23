@@ -16,6 +16,7 @@ import type {
   Workflow,
   WorkflowStep,
 } from "../types/workflows.js";
+import { sessionJobFolders, type SessionJobIdentity } from "./session-job-paths.js";
 
 const ENV_ADDITIONAL_JOBS_FOLDERS = "DEEPWORK_ADDITIONAL_JOBS_FOLDERS";
 const ENV_STANDARD_JOBS_DIR = "DEEPWORK_STANDARD_JOBS_DIR";
@@ -30,11 +31,11 @@ export class JobParseError extends Error {
   }
 }
 
-export async function getWorkflowsNative(projectRoot: string): Promise<GetWorkflowsResponse> {
+export async function getWorkflowsNative(projectRoot: string, identity: SessionJobIdentity = {}): Promise<GetWorkflowsResponse> {
   const root = resolve(projectRoot);
   await ensureSchemaAvailable(root);
 
-  const { jobs, errors } = await loadAllJobs(root);
+  const { jobs, errors } = await loadAllJobs(root, identity);
   const issues = errorsToIssues(errors);
   const response: GetWorkflowsResponse = {
     jobs: jobs.map(jobToInfo),
@@ -52,8 +53,8 @@ export async function getWorkflowsNative(projectRoot: string): Promise<GetWorkfl
   return response;
 }
 
-export async function getJobFolders(projectRoot: string): Promise<string[]> {
-  const folders = [join(projectRoot, ".deepwork", "jobs")];
+export async function getJobFolders(projectRoot: string, identity: SessionJobIdentity = {}): Promise<string[]> {
+  const folders = [...sessionJobFolders(projectRoot, identity), join(projectRoot, ".deepwork", "jobs")];
   const standard = standardJobsDir();
   if (standard) folders.push(standard);
 
@@ -66,12 +67,12 @@ export async function getJobFolders(projectRoot: string): Promise<string[]> {
   return folders;
 }
 
-export async function loadAllJobs(projectRoot: string): Promise<{ jobs: JobDefinition[]; errors: JobLoadError[] }> {
+export async function loadAllJobs(projectRoot: string, identity: SessionJobIdentity = {}): Promise<{ jobs: JobDefinition[]; errors: JobLoadError[] }> {
   const jobs: JobDefinition[] = [];
   const errors: JobLoadError[] = [];
   const seenNames = new Set<string>();
 
-  for (const folder of await getJobFolders(projectRoot)) {
+  for (const folder of await getJobFolders(projectRoot, identity)) {
     if (!existsSync(folder)) continue;
     const entries = await readdir(folder, { withFileTypes: true }).catch(() => []);
     for (const entry of entries.filter((item) => item.isDirectory()).sort((a, b) => a.name.localeCompare(b.name))) {

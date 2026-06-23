@@ -65,6 +65,8 @@ The extension entry point registers `/review`, `/deepwork_review`, `/configure-r
 The implementation requirements define these Pi-native tools:
 
 - `deepwork_get_workflows`
+- `deepwork_register_session_job`
+- `deepwork_get_session_job`
 - `deepwork_start_workflow`
 - `deepwork_finished_step`
 - `deepwork_abort_workflow`
@@ -74,7 +76,7 @@ The implementation requirements define these Pi-native tools:
 - `deepwork_mark_review_as_passed`
 - `deepwork_get_named_schemas`
 
-These tools are registered with `pi.registerTool()` and do not call MCP tools or require an MCP server. `deepwork_get_workflows` uses native TypeScript workflow discovery/parsing and includes bundled standard jobs from `standard_jobs/` unless `DEEPWORK_STANDARD_JOBS_DIR` overrides the source. Other runtime operations still use a first-pass one-shot Python compatibility bridge that reuses existing DeepWork modules; future work should replace those compatibility shims with native TypeScript implementations.
+These tools are registered with `pi.registerTool()` and do not call MCP tools or require an MCP server. Workflow discovery, workflow runtime, and session-job registration use native TypeScript implementation paths and include bundled standard jobs from `standard_jobs/` unless `DEEPWORK_STANDARD_JOBS_DIR` overrides the source.
 
 ## Package resources
 
@@ -95,6 +97,7 @@ Implemented so far:
 - `extensions/index.ts` native Pi tool, command, and lifecycle registration
 - `src/bridge.ts` centralized compatibility bridge for operations not yet ported to TypeScript
 - `src/workflows/discovery.ts` native TypeScript workflow discovery and parsing for `deepwork_get_workflows`
+- `src/workflows/session-jobs.ts` native TypeScript session-job registration and retrieval for DeepPlan-generated jobs
 - `tsconfig.json` TypeScript project config
 - `doc/specs/deepwork-pi/` native Pi requirements
 - `skills/` native Pi skill set

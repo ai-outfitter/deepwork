@@ -17,6 +17,8 @@ A **job** is a collection of related **workflows**. For example, a `code_review`
 Use the native Pi DeepWork tools:
 
 - `deepwork_get_workflows` — discover available jobs and workflows
+- `deepwork_register_session_job` — register a transient job for the current Pi session
+- `deepwork_get_session_job` — retrieve a transient job registered for the current Pi session
 - `deepwork_start_workflow` — start a workflow
 - `deepwork_finished_step` — submit outputs for the current step
 - `deepwork_go_to_step` — revisit the current or an earlier step

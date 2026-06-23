@@ -2,7 +2,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { abortWorkflow, finishedStep, getActiveWorkflowStack, startWorkflow, type BridgeOptions } from "../src/bridge.js";
+import { abortWorkflow, finishedStep, getActiveWorkflowStack, getSessionJob, getWorkflows, registerSessionJob, startWorkflow, type BridgeOptions } from "../src/bridge.js";
 
 const tempDirs: string[] = [];
 let previousStandardJobsDir: string | undefined;
@@ -29,6 +29,31 @@ describe("native workflow runtime edge cases", () => {
 
     expect(json(started).begin_step.session_id).toBe("default");
     expect(json(next).status).toBe("next_step");
+  });
+
+  // Covers PI-REQ-002.14.1 through PI-REQ-002.14.12 by proving native Pi session jobs can be registered, retrieved, discovered, prioritized, and started in the same session only.
+  it("registers, retrieves, and starts a session-scoped job", async () => {
+    const project = await makeProject();
+    const options = optionsFor(project, "session-job-session");
+    const jobYaml = oneStepJobYaml("generated_job", "generated_output");
+    await writeJob(project, "generated_job", oneStepJobYaml("generated_job", "local_output"));
+
+    const registered = await registerSessionJob({ job_name: "generated_job", job_definition_yaml: jobYaml }, options);
+    const retrieved = await getSessionJob({ job_name: "generated_job" }, options);
+    const workflows = await getWorkflows(options);
+    const started = await startWorkflow({ goal: "generated", job_name: "generated_job", workflow_name: "full" }, options);
+    const complete = await finishedStep({ outputs: { generated_output: "done" }, quality_review_override_reason: "test" }, options);
+
+    expect(json(registered)).toMatchObject({ status: "registered", job_name: "generated_job", session_id: "session-job-session" });
+    expect(json(retrieved)).toMatchObject({ job_name: "generated_job", job_definition_yaml: jobYaml, session_id: "session-job-session" });
+    expect(((json(workflows).jobs as Array<{ name: string }>)).map((job) => job.name)).toContain("generated_job");
+    expect(json(started).begin_step.job_dir).toContain(".deepwork/tmp/sessions/pi/session-session-job-session/jobs/generated_job");
+    expect(json(complete).status).toBe("workflow_complete");
+
+    const otherStarted = await startWorkflow({ goal: "wrong session", job_name: "generated_job", workflow_name: "full" }, optionsFor(project, "other-session"));
+    expect(json(otherStarted).begin_step.job_dir).toContain(".deepwork/jobs/generated_job");
+    expect(json(otherStarted).begin_step.step_expected_outputs[0].name).toBe("local_output");
+    await expect(getSessionJob({ job_name: "generated_job" }, optionsFor(project, "other-session"))).rejects.toThrow("not found for session 'other-session'");
   });
 
   // Covers PI-REQ-002.4.9, PI-REQ-002.5.11, PI-REQ-002.5.13, and PI-REQ-002.5.14 by verifying native state persists across separate tool calls.

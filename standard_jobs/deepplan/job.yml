@@ -39,7 +39,8 @@ workflows:
       these step instructions instead of the default planning phases.
 
       You are in plan mode — file writes are restricted to the plan file only.
-      MCP tool calls (like register_session_job) can write files on your behalf.
+      Native DeepWork session-job tool calls (like deepwork_register_session_job)
+      can write generated job files on your behalf.
     steps:
       - name: initial_understanding
         instructions: |
@@ -126,10 +127,12 @@ workflows:
           3. The final step of the job MUST be `verify_completes_request`, which
              reviews that the `original_user_request` has been satisfied, or writes
              a compelling summary of why the implementation differs.
-          4. Call `register_session_job` with the job definition YAML. If it returns
-             validation errors, fix them and call it again.
-          5. You can call `register_session_job` multiple times — each call overwrites
-             the previous definition.
+          4. Call `deepwork_register_session_job` with `job_name` and
+             `job_definition_yaml`. If it returns validation errors, fix them and
+             call it again.
+          5. You can call `deepwork_register_session_job` multiple times with the
+             same `job_name` — each call overwrites the previous definition for
+             this Pi session.
 
           Output the registered job name as `session_job_name`.
         inputs:
@@ -147,7 +150,7 @@ workflows:
             review:
               strategy: individual
               instructions: |
-                Call `get_session_job` to retrieve the registered job definition.
+                Call `deepwork_get_session_job` to retrieve the registered job definition.
                 Review whether the job definition faithfully completes the
                 `original_user_request`. Check that:
                 - All requirements from the original request are covered by steps
@@ -170,16 +173,16 @@ workflows:
           1. Amend the plan file to include these execution instructions at the top:
              ```
              > **Execution**: Before starting implementation, complete the DeepPlan
-             > workflow by calling `finished_step` on the `present_plan` step, then
-             > call `start_workflow` with job_name=`<session_job_name>`, workflow_name=`main`.
+             > workflow by calling `deepwork_finished_step` on the `present_plan` step, then
+             > call `deepwork_start_workflow` with job_name=`<session_job_name>`, workflow_name=`main`.
              ```
           2. Call `ExitPlanMode` to present the plan to the user. Do NOT call
-             `finished_step` on this step yet — the workflow stays open.
-          3. If the user requests changes after seeing the plan, use `go_to_step`
-             to return to `enrich_the_plan` and revise.
+             `deepwork_finished_step` on this step yet — the workflow stays open.
+          3. If the user requests changes after seeing the plan, use
+             `deepwork_go_to_step` to return to `enrich_the_plan` and revise.
           4. After the user approves the plan, follow the execution instructions
-             in the plan file: call `finished_step` on this step, then start the
-             session job workflow.
+             in the plan file: call `deepwork_finished_step` on this step, then
+             start the session job workflow.
         inputs:
           original_user_request:
             required: true
@@ -193,5 +196,5 @@ workflows:
 
     post_workflow_instructions: |
       The plan has been approved and the DeepPlan workflow is complete.
-      Now start the execution workflow by calling `start_workflow` with the
+      Now start the execution workflow by calling `deepwork_start_workflow` with the
       session job name from the plan's execution instructions.

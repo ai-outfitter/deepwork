@@ -12,7 +12,7 @@ const IMPORTANT_NOTE = "IMPORTANT: If, given the info on the workflow you now ha
 
 export { WorkflowRuntimeError } from "./errors.js";
 
-export async function startWorkflowNative(params: JsonObject, options: { cwd: string; sessionId?: string }): Promise<JsonValue> {
+export async function startWorkflowNative(params: JsonObject, options: { cwd: string; sessionId?: string; agentId?: string }): Promise<JsonValue> {
   const projectRoot = resolve(options.cwd);
   const sessionId = String(params.session_id ?? options.sessionId ?? "default");
   const goal = requiredString(params.goal, "goal");
@@ -20,7 +20,7 @@ export async function startWorkflowNative(params: JsonObject, options: { cwd: st
   const workflowNameParam = requiredString(params.workflow_name, "workflow_name");
   const inputs = asObject(params.inputs ?? {});
 
-  const job = await getJob(projectRoot, jobName);
+  const job = await getJob(projectRoot, jobName, sessionId, options.agentId);
   const workflowName = selectWorkflow(job, workflowNameParam);
   const workflow = job.workflows[workflowName];
   if (workflow.steps.length === 0) throw new WorkflowRuntimeError(`Workflow '${workflowName}' has no steps`, "ToolError");
@@ -50,7 +50,7 @@ export async function startWorkflowNative(params: JsonObject, options: { cwd: st
   });
 }
 
-export async function finishedStepNative(params: JsonObject, options: { cwd: string; sessionId?: string }): Promise<JsonValue> {
+export async function finishedStepNative(params: JsonObject, options: { cwd: string; sessionId?: string; agentId?: string }): Promise<JsonValue> {
   const projectRoot = resolve(options.cwd);
   const sessionId = String(params.session_id ?? options.sessionId ?? "default");
   const outputs = asObject(params.outputs ?? {});
@@ -58,7 +58,7 @@ export async function finishedStepNative(params: JsonObject, options: { cwd: str
   const frame = activeFrame(session);
   if (!frame) throw noActiveSessionError();
 
-  const job = await getJob(projectRoot, frame.job_name);
+  const job = await getJob(projectRoot, frame.job_name, sessionId, options.agentId);
   const workflow = job.workflows[frame.workflow_name];
   const step = workflow.steps[frame.current_step_index];
   validateStepOutputs(job, step, outputs, projectRoot);
@@ -130,7 +130,7 @@ export async function finishedStepNative(params: JsonObject, options: { cwd: str
   });
 }
 
-export async function abortWorkflowNative(params: JsonObject, options: { cwd: string; sessionId?: string }): Promise<JsonValue> {
+export async function abortWorkflowNative(params: JsonObject, options: { cwd: string; sessionId?: string; agentId?: string }): Promise<JsonValue> {
   const projectRoot = resolve(options.cwd);
   const sessionId = String(params.session_id ?? options.sessionId ?? "default");
   const explanation = requiredString(params.explanation, "explanation");
@@ -138,7 +138,7 @@ export async function abortWorkflowNative(params: JsonObject, options: { cwd: st
   const frame = activeFrame(session);
   if (!frame) throw noActiveSessionError();
 
-  const job = await getJob(projectRoot, frame.job_name);
+  const job = await getJob(projectRoot, frame.job_name, sessionId, options.agentId);
   const workflow = job.workflows[frame.workflow_name];
   const abortedStep = workflow.steps[frame.current_step_index]?.name ?? null;
   const abortedWorkflow = `${frame.job_name}/${frame.workflow_name}`;
@@ -159,7 +159,7 @@ export async function abortWorkflowNative(params: JsonObject, options: { cwd: st
   });
 }
 
-export async function goToStepNative(params: JsonObject, options: { cwd: string; sessionId?: string }): Promise<JsonValue> {
+export async function goToStepNative(params: JsonObject, options: { cwd: string; sessionId?: string; agentId?: string }): Promise<JsonValue> {
   const projectRoot = resolve(options.cwd);
   const sessionId = String(params.session_id ?? options.sessionId ?? "default");
   const stepId = requiredString(params.step_id, "step_id");
@@ -167,7 +167,7 @@ export async function goToStepNative(params: JsonObject, options: { cwd: string;
   const frame = activeFrame(session);
   if (!frame) throw noActiveSessionError();
 
-  const job = await getJob(projectRoot, frame.job_name);
+  const job = await getJob(projectRoot, frame.job_name, sessionId, options.agentId);
   const workflow = job.workflows[frame.workflow_name];
   const targetIndex = workflow.steps.findIndex((step) => step.name === stepId);
   const available = workflow.steps.map((step) => step.name);
@@ -197,8 +197,8 @@ export async function goToStepNative(params: JsonObject, options: { cwd: string;
   });
 }
 
-async function getJob(projectRoot: string, jobName: string): Promise<JobDefinition> {
-  for (const folder of await getJobFolders(projectRoot)) {
+async function getJob(projectRoot: string, jobName: string, sessionId?: string, agentId?: string): Promise<JobDefinition> {
+  for (const folder of await getJobFolders(projectRoot, { sessionId, agentId })) {
     const jobDir = `${folder}/${jobName}`;
     try {
       return await parseJobDefinition(jobDir);
