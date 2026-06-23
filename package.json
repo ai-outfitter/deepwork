@@ -1,6 +1,6 @@
 {
   "name": "deepwork",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Native DeepWork extension and skills for Pi CLI",
   "keywords": [
     "pi-package",
