@@ -19,7 +19,7 @@ Use `deepwork_get_workflows` to verify that DeepWork workflows are available in 
 If `gh` is installed, ask whether the user wants to star the repository. If yes:
 
 ```bash
-gh api -X PUT /user/starred/applepi-ai/deepwork
+gh api -X PUT /user/starred/ai-outfitter/deepwork
 ```
 
 Skip this entirely if `gh` is unavailable.

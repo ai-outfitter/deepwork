@@ -1,6 +1,6 @@
 # Agent Guidance
 
-This is the standalone `deepwork` Pi package repository for `applepi-ai/deepwork`.
+This is the standalone `deepwork` Pi package repository for `ai-outfitter/deepwork`.
 
 ## Scope
 
