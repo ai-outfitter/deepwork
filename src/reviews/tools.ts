@@ -8,6 +8,9 @@ import { getChangedFiles, getLastCommitFiles } from "./git.js";
 import { findUnchangedMatchingFiles, matchFilesToRules, matchRule } from "./matching.js";
 import { computeReviewId, formatReviewTasksForPi, REVIEW_INSTRUCTIONS_DIR, writeInstructionFiles } from "./instructions.js";
 
+export const POST_COMMIT_REVIEW_REMINDER_CONTEXT = "You **MUST** use the ask_user_question tool to offer the user the option to run `/review` for the changes you just committed if you have not run a review recently.";
+export const POST_COMMIT_ALL_PASSED_CONTEXT = "No re-review needed - all reviews passed for committed files";
+
 export async function getReviewInstructionsNative(params: JsonObject, projectRoot: string): Promise<string> {
   const root = resolve(projectRoot);
   const { rules, errors } = await loadNativeReviewRules(root);
@@ -95,6 +98,18 @@ export async function hasUnpassedReviewForLastCommit(projectRoot: string): Promi
     return false;
   }
   return hasUnpassedReviewForFiles(root, committedFiles);
+}
+
+export async function getPostCommitReviewContextNative(projectRoot: string): Promise<string> {
+  const root = resolve(projectRoot);
+  try {
+    const committedFiles = await getLastCommitFiles(root);
+    return await hasUnpassedReviewForFiles(root, committedFiles)
+      ? POST_COMMIT_REVIEW_REMINDER_CONTEXT
+      : POST_COMMIT_ALL_PASSED_CONTEXT;
+  } catch {
+    return POST_COMMIT_REVIEW_REMINDER_CONTEXT;
+  }
 }
 
 export async function hasUnpassedReviewForFiles(projectRoot: string, files: string[], options: { includeCatchAllRules?: boolean } = {}): Promise<boolean> {

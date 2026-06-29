@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getWorkflowsNative } from "./workflows/discovery.js";
-import { getConfiguredReviewsNative, getReviewInstructionsNative, hasUnpassedReviewForCurrentChanges } from "./reviews/tools.js";
+import { getConfiguredReviewsNative, getPostCommitReviewContextNative, getReviewInstructionsNative, hasUnpassedReviewForCurrentChanges } from "./reviews/tools.js";
 import { getActiveWorkflowStackNative } from "./workflows/status.js";
 import { getNamedSchemasNative } from "./deepschema/tools.js";
 import { runDeepSchemaWriteHookNative } from "./deepschema/write-hook.js";
@@ -293,6 +293,10 @@ export async function runDeepSchemaWriteHookFromPythonBridge(cwd: string, toolNa
 
 export async function hasApplicableReviews(cwd: string): Promise<boolean> {
   return hasUnpassedReviewForCurrentChanges(cwd);
+}
+
+export async function getPostCommitReviewContext(cwd: string): Promise<string> {
+  return getPostCommitReviewContextNative(cwd);
 }
 
 export function parseReviewTasks(output: string): ReviewTask[] {

@@ -93,6 +93,7 @@ async function loadHarness(options: { workflows?: unknown; startResult?: unknown
     getActiveWorkflowStack: vi.fn(),
     getConfiguredReviews: vi.fn(),
     getNamedSchemas: vi.fn(),
+    getPostCommitReviewContext: vi.fn(),
     getReviewInstructions: vi.fn(),
     getWorkflows: vi.fn(async () => options.workflows ?? workflowsWithAuthoring),
     goToStep: vi.fn(),

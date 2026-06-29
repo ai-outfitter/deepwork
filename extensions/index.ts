@@ -10,11 +10,11 @@ import {
   getActiveWorkflowStack,
   getConfiguredReviews,
   getNamedSchemas,
+  getPostCommitReviewContext,
   getReviewInstructions,
   getSessionJob,
   getWorkflows,
   goToStep,
-  hasApplicableReviews,
   markReviewAsPassed,
   parseReviewTasks,
   registerSessionJob,
@@ -302,15 +302,8 @@ function registerLifecycleHooks(pi: ExtensionAPI, pendingSubagentReviewPasses: M
     try {
       if (event.toolName === "bash") {
         const command = String((event.input as { command?: unknown }).command ?? "");
-        if (/\bgit\s+commit\b/.test(command) && bashResultSucceeded(event) && await hasApplicableReviews(ctx.cwd)) {
-          pi.sendMessage(
-            {
-              customType: "deepwork-review-reminder",
-              content: "A git commit just ran. This project has DeepWork review rules; run /review before merging if those rules apply to this branch.",
-              display: true,
-            },
-            { deliverAs: "followUp" },
-          );
+        if (/\bgit\s+commit\b/.test(command) && bashResultSucceeded(event)) {
+          return appendDeepWorkToolContext(event, await getPostCommitReviewContext(ctx.cwd), "postCommitReviewContext");
         }
       }
 
@@ -321,16 +314,7 @@ function registerLifecycleHooks(pi: ExtensionAPI, pendingSubagentReviewPasses: M
       const context = await runDeepSchemaWriteHook(ctx.cwd, event.toolName, filePath);
       if (!context) return;
 
-      return {
-        content: [
-          ...(Array.isArray(event.content) ? event.content : []),
-          { type: "text", text: context },
-        ],
-        details: {
-          ...(typeof event.details === "object" && event.details !== null ? event.details : {}),
-          deepwork: { deepschemaContext: context },
-        },
-      };
+      return appendDeepWorkToolContext(event, context, "deepschemaContext");
     } catch {
       return;
     }
@@ -477,6 +461,23 @@ function toolResult(value: JsonValue | string, details?: JsonObject) {
   return {
     content: [{ type: "text" as const, text }],
     details: details ?? (typeof value === "object" && value !== null && !Array.isArray(value) ? value as JsonObject : { result: value }),
+  };
+}
+
+function appendDeepWorkToolContext(event: { content?: unknown; details?: unknown }, context: string, detailKey: string) {
+  const details = typeof event.details === "object" && event.details !== null ? event.details as Record<string, unknown> : {};
+  const existingDeepwork = typeof details.deepwork === "object" && details.deepwork !== null && !Array.isArray(details.deepwork)
+    ? details.deepwork as Record<string, unknown>
+    : {};
+  return {
+    content: [
+      ...(Array.isArray(event.content) ? event.content : []),
+      { type: "text" as const, text: context },
+    ],
+    details: {
+      ...details,
+      deepwork: { ...existingDeepwork, [detailKey]: context },
+    },
   };
 }
 

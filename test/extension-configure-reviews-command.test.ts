@@ -99,6 +99,7 @@ async function loadHarness(options: { project: string; configuredError?: Error; 
       return [{ name: "typescript_rule", description: "TypeScript review", defining_file: ".deepreview:1" }];
     }),
     getNamedSchemas: vi.fn(),
+    getPostCommitReviewContext: vi.fn(),
     getReviewInstructions: vi.fn(async () => options.reviewInstructions ?? "No review tasks to execute."),
     getWorkflows: vi.fn(),
     goToStep: vi.fn(),
