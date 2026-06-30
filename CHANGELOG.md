@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/ai-outfitter/deepwork/compare/v0.2.1...v0.2.2) (2026-06-30)
+
+
+### Bug Fixes
+
+* **reviews:** excessive reruns  ([#8](https://github.com/ai-outfitter/deepwork/issues/8)) ([e33c9d6](https://github.com/ai-outfitter/deepwork/commit/e33c9d62cbb2ce864dd46a971b2df272db1db6bb))
+
 ## [0.2.1](https://github.com/ai-outfitter/deepwork/compare/v0.2.0...v0.2.1) (2026-06-23)
 
 
