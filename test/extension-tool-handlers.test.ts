@@ -182,6 +182,7 @@ async function loadHarness(options: { reviewInstructions?: string; parsedTasks?:
     getActiveWorkflowStack: vi.fn(),
     getConfiguredReviews: vi.fn(async () => ({ reviews: [] })),
     getNamedSchemas: vi.fn(async () => ({ schemas: [] })),
+    getPostCommitReviewContext: vi.fn(),
     getReviewInstructions: vi.fn(async () => options.reviewInstructions ?? "instructions"),
     getSessionJob: vi.fn(async () => ({ job_name: "j" })),
     getWorkflows: vi.fn(async () => ({ jobs: [] })),

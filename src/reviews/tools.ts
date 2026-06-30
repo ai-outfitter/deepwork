@@ -8,6 +8,22 @@ import { getChangedFiles, getLastCommitFiles } from "./git.js";
 import { findUnchangedMatchingFiles, matchFilesToRules, matchRule } from "./matching.js";
 import { computeReviewId, formatReviewTasksForPi, REVIEW_INSTRUCTIONS_DIR, writeInstructionFiles } from "./instructions.js";
 
+/**
+ * TODO: Make post-commit reminder delivery mode explicit.
+ *
+ * Interactive Pi sessions should ask the user whether to run `/review` because
+ * the fastest high-quality path is a one-click human choice. Fully autonomous
+ * runs should not require `ask_user_question`, since no human may be present to
+ * answer and the prompt can stall completion. Add a small policy switch, likely
+ * an environment variable such as `DEEPWORK_POST_COMMIT_REVIEW_MODE`, with modes
+ * like `interactive` (ask), `autonomous` (emit non-blocking next-action guidance),
+ * and possibly `off` for CI/batch jobs. Prefer an explicit env/config signal over
+ * guessing from tool availability, but tool availability can be a fallback when
+ * Pi exposes no run-mode metadata.
+ */
+export const POST_COMMIT_REVIEW_REMINDER_CONTEXT = "You **MUST** use the ask_user_question tool to offer the user a quick quality check: run `/review` now for the changes they just committed, or skip for now. Do not run `/review` unless the user chooses it.";
+export const POST_COMMIT_ALL_PASSED_CONTEXT = "No re-review needed - all reviews passed for committed files";
+
 export async function getReviewInstructionsNative(params: JsonObject, projectRoot: string): Promise<string> {
   const root = resolve(projectRoot);
   const { rules, errors } = await loadNativeReviewRules(root);
@@ -95,6 +111,18 @@ export async function hasUnpassedReviewForLastCommit(projectRoot: string): Promi
     return false;
   }
   return hasUnpassedReviewForFiles(root, committedFiles);
+}
+
+export async function getPostCommitReviewContextNative(projectRoot: string): Promise<string> {
+  const root = resolve(projectRoot);
+  try {
+    const committedFiles = await getLastCommitFiles(root);
+    return await hasUnpassedReviewForFiles(root, committedFiles)
+      ? POST_COMMIT_REVIEW_REMINDER_CONTEXT
+      : POST_COMMIT_ALL_PASSED_CONTEXT;
+  } catch {
+    return POST_COMMIT_REVIEW_REMINDER_CONTEXT;
+  }
 }
 
 export async function hasUnpassedReviewForFiles(projectRoot: string, files: string[], options: { includeCatchAllRules?: boolean } = {}): Promise<boolean> {

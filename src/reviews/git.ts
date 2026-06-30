@@ -17,7 +17,7 @@ export async function getChangedFiles(projectRoot: string, baseRef?: string): Pr
 }
 
 export async function getLastCommitFiles(projectRoot: string): Promise<string[]> {
-  return gitLines(projectRoot, ["diff-tree", "--no-commit-id", "--name-only", "-r", "--diff-filter=ACMR", "HEAD"]);
+  return gitLines(projectRoot, ["diff-tree", "--no-commit-id", "--name-only", "--diff-filter=ACMR", "-r", "HEAD"]);
 }
 
 async function detectBaseRef(projectRoot: string): Promise<string> {

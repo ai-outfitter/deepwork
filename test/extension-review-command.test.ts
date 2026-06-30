@@ -124,6 +124,7 @@ async function loadHarness(options: { output: string; subagentsStarted?: boolean
     getActiveWorkflowStack: vi.fn(),
     getConfiguredReviews: vi.fn(),
     getNamedSchemas: vi.fn(),
+    getPostCommitReviewContext: vi.fn(),
     getReviewInstructions: vi.fn(async () => options.output),
     getWorkflows: vi.fn(),
     goToStep: vi.fn(),

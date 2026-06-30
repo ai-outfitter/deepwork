@@ -27,6 +27,7 @@ async function loadHarness() {
     getActiveWorkflowStack: vi.fn(),
     getConfiguredReviews: vi.fn(),
     getNamedSchemas: vi.fn(),
+    getPostCommitReviewContext: vi.fn(),
     getReviewInstructions: vi.fn(),
     getWorkflows: vi.fn(),
     goToStep: vi.fn(),

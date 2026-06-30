@@ -92,8 +92,8 @@ matchers:
     expect(output.content.at(-1)?.text).toContain("Keep docs concise.");
   });
 
-  // Covers PI-REQ-001.10.1, PI-REQ-001.10.2, PI-REQ-001.10.3, and PI-REQ-001.10.6 by suppressing the post-commit reminder when the review tool itself has no current tasks to run.
-  it("does not send a native review reminder after git commit when review instructions have no tasks", async () => {
+  // Covers PI-REQ-001.10.1 through PI-REQ-001.10.6 by appending old-style post-commit context for HEAD files without creating a follow-up turn.
+  it("appends a scoped review reminder for unpassed committed files without sending a follow-up", async () => {
     const project = await makeProject();
     await writeFile(join(project, ".deepreview"), `typescript_rule:
   description: TypeScript review
@@ -113,19 +113,26 @@ matchers:
     const pi = createPiHarness();
     deepworkPi(pi.api);
 
-    await pi.handlers.tool_result?.({
+    const result = await pi.handlers.tool_result?.({
       toolName: "bash",
       input: { command: "git commit -m test" },
-      content: [],
+      content: [{ type: "text", text: "commit ok" }],
       details: { exit_code: 0 },
     }, ctx(project));
 
     expect(await getReviewInstructions({}, { cwd: project })).toBe("No changed files detected.");
     expect(pi.messages).toEqual([]);
+    const output = result as { content: Array<{ type: string; text: string }>; details: { deepwork?: { postCommitReviewContext?: string } } };
+    expect(output.content[0].text).toBe("commit ok");
+    expect(output.content.at(-1)?.text).toContain("ask_user_question");
+    expect(output.content.at(-1)?.text).toContain("/review");
+    expect(output.content.at(-1)?.text).toContain("quick quality check");
+    expect(output.content.at(-1)?.text).not.toContain("recently");
+    expect(output.details.deepwork?.postCommitReviewContext).toContain("ask_user_question");
   });
 
-  // Covers PI-REQ-001.10.1, PI-REQ-001.10.2, PI-REQ-001.10.3, and PI-REQ-001.10.6 by sending a native follow-up reminder after a successful git commit command when the review tool has current unpassed tasks to run.
-  it("sends a native review reminder after git commit when review instructions have tasks", async () => {
+  // Covers PI-REQ-001.10.2 through PI-REQ-001.10.6 by proving dirty worktree review tasks no longer drive post-commit reminders.
+  it("does not use unrelated current changes to decide post-commit review context", async () => {
     const project = await makeProject();
     await writeFile(join(project, ".deepreview"), `typescript_rule:
   description: TypeScript review
@@ -143,7 +150,7 @@ matchers:
     const pi = createPiHarness();
     deepworkPi(pi.api);
 
-    await pi.handlers.tool_result?.({
+    const result = await pi.handlers.tool_result?.({
       toolName: "bash",
       input: { command: "git commit -m test" },
       content: [],
@@ -151,14 +158,14 @@ matchers:
     }, ctx(project));
 
     expect(parseReviewTasks(await getReviewInstructions({}, { cwd: project }))).toHaveLength(1);
-    expect(pi.messages).toHaveLength(1);
-    expect(pi.messages[0].message).toMatchObject({ customType: "deepwork-review-reminder", display: true });
-    expect(pi.messages[0].message.content).toContain("run /review before merging");
-    expect(pi.messages[0].options).toEqual({ deliverAs: "followUp" });
+    expect(pi.messages).toEqual([]);
+    const output = result as { content: Array<{ type: string; text: string }>; details: { deepwork?: { postCommitReviewContext?: string } } };
+    expect(output.content.at(-1)?.text).toContain("No re-review needed - all reviews passed for committed files");
+    expect(output.details.deepwork?.postCommitReviewContext).toContain("No re-review needed");
   });
 
-  // Covers PI-REQ-001.10.2, PI-REQ-001.10.4, PI-REQ-001.10.5, and PI-REQ-001.12.2 by avoiding reminders when the current review-instruction scope has no changed files to review.
-  it("does not send a review reminder for unrelated committed files when there are no current changes", async () => {
+  // Covers PI-REQ-001.10.2, PI-REQ-001.10.4, PI-REQ-001.10.5, and PI-REQ-001.12.2 by treating committed files with no non-catch-all reviews as already passed.
+  it("appends all-passed context for unrelated committed files", async () => {
     const project = await makeProject();
     await writeFile(join(project, ".deepreview"), `typescript_rule:
   description: TypeScript review
@@ -187,7 +194,7 @@ catch_all:
     const pi = createPiHarness();
     deepworkPi(pi.api);
 
-    await pi.handlers.tool_result?.({
+    const result = await pi.handlers.tool_result?.({
       toolName: "bash",
       input: { command: "git commit -m docs" },
       content: [],
@@ -195,10 +202,49 @@ catch_all:
     }, ctx(project));
 
     expect(pi.messages).toEqual([]);
+    const output = result as { content: Array<{ type: string; text: string }> };
+    expect(output.content.at(-1)?.text).toContain("No re-review needed - all reviews passed for committed files");
   });
 
-  // Covers PI-REQ-001.10.5 and PI-REQ-002.9.13 by avoiding reminders when the current review-instruction scope has no unpassed tasks.
-  it("does not send a review reminder when matching reviews have no current unpassed tasks", async () => {
+  // Covers PI-REQ-001.10.2 through PI-REQ-001.10.5 by avoiding prompts for deleted files that the normal /review path cannot inspect.
+  it("appends all-passed context for deletion-only commits", async () => {
+    const project = await makeProject();
+    await writeFile(join(project, ".deepreview"), `typescript_rule:
+  description: TypeScript review
+  match:
+    include:
+      - "src/**/*.ts"
+  review:
+    strategy: individual
+    instructions: Check TypeScript carefully.
+`);
+    await git(project, ["init"]);
+    await git(project, ["add", ".deepreview"]);
+    await git(project, ["commit", "-m", "add review rules"]);
+    await writeFile(join(project, "src", "removed.ts"), "export const removed = true;\n");
+    await git(project, ["add", "src/removed.ts"]);
+    await git(project, ["commit", "-m", "add removed file"]);
+    await git(project, ["rm", "src/removed.ts"]);
+    await git(project, ["commit", "-m", "remove file"]);
+    const pi = createPiHarness();
+    deepworkPi(pi.api);
+
+    const result = await pi.handlers.tool_result?.({
+      toolName: "bash",
+      input: { command: "git commit -m remove" },
+      content: [],
+      details: { exit_code: 0 },
+    }, ctx(project));
+
+    expect(parseReviewTasks(await getReviewInstructions({}, { cwd: project }))).toHaveLength(0);
+    expect(pi.messages).toEqual([]);
+    const output = result as { content: Array<{ type: string; text: string }>; details: { deepwork?: { postCommitReviewContext?: string } } };
+    expect(output.content.at(-1)?.text).toContain("No re-review needed - all reviews passed for committed files");
+    expect(output.details.deepwork?.postCommitReviewContext).toContain("No re-review needed");
+  });
+
+  // Covers PI-REQ-001.10.5 and PI-REQ-002.9.13 by appending all-passed context when committed-file reviews have pass markers.
+  it("appends all-passed context when committed-file reviews have pass markers", async () => {
     const project = await makeProject();
     await writeFile(join(project, ".deepreview"), `typescript_rule:
   description: TypeScript review
@@ -222,7 +268,7 @@ catch_all:
     const pi = createPiHarness();
     deepworkPi(pi.api);
 
-    await pi.handlers.tool_result?.({
+    const result = await pi.handlers.tool_result?.({
       toolName: "bash",
       input: { command: "git commit -m app" },
       content: [],
@@ -230,6 +276,9 @@ catch_all:
     }, ctx(project));
 
     expect(pi.messages).toEqual([]);
+    const output = result as { content: Array<{ type: string; text: string }>; details: { deepwork?: { postCommitReviewContext?: string } } };
+    expect(output.content.at(-1)?.text).toContain("No re-review needed - all reviews passed for committed files");
+    expect(output.details.deepwork?.postCommitReviewContext).toContain("No re-review needed");
   });
 
   // Covers PI-REQ-001.10.2 and PI-REQ-001.12.2 by ignoring failed git commit commands.
@@ -253,23 +302,24 @@ catch_all:
     const pi = createPiHarness();
     deepworkPi(pi.api);
 
-    await pi.handlers.tool_result?.({
+    const result = await pi.handlers.tool_result?.({
       toolName: "bash",
       input: { command: "git commit -m failed" },
       content: [],
       details: { exit_code: 1 },
     }, ctx(project));
 
+    expect(result).toBeUndefined();
     expect(pi.messages).toEqual([]);
   });
 
-  // Covers PI-REQ-001.10.5 and PI-REQ-001.12.2 by avoiding redundant review reminders when no configured reviews apply.
-  it("does not send a review reminder after git commit when no review rules are configured", async () => {
+  // Covers PI-REQ-001.10.2 and PI-REQ-001.12.2 by falling back to the reminder when HEAD file inspection fails.
+  it("appends the review reminder when last-commit inspection fails", async () => {
     const project = await makeProject();
     const pi = createPiHarness();
     deepworkPi(pi.api);
 
-    await pi.handlers.tool_result?.({
+    const result = await pi.handlers.tool_result?.({
       toolName: "bash",
       input: { command: "git commit -m test" },
       content: [],
@@ -277,6 +327,8 @@ catch_all:
     }, ctx(project));
 
     expect(pi.messages).toEqual([]);
+    const output = result as { content: Array<{ type: string; text: string }> };
+    expect(output.content.at(-1)?.text).toContain("ask_user_question");
   });
 });
 
