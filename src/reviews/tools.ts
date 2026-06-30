@@ -8,7 +8,7 @@ import { getChangedFiles, getLastCommitFiles } from "./git.js";
 import { findUnchangedMatchingFiles, matchFilesToRules, matchRule } from "./matching.js";
 import { computeReviewId, formatReviewTasksForPi, REVIEW_INSTRUCTIONS_DIR, writeInstructionFiles } from "./instructions.js";
 
-export const POST_COMMIT_REVIEW_REMINDER_CONTEXT = "You **MUST** use the ask_user_question tool to offer the user the option to run `/review` for the changes you just committed if you have not run a review recently.";
+export const POST_COMMIT_REVIEW_REMINDER_CONTEXT = "You **MUST** use the ask_user_question tool to offer the user a quick quality check: run `/review` now for the changes they just committed, or skip for now. Do not run `/review` unless the user chooses it.";
 export const POST_COMMIT_ALL_PASSED_CONTEXT = "No re-review needed - all reviews passed for committed files";
 
 export async function getReviewInstructionsNative(params: JsonObject, projectRoot: string): Promise<string> {

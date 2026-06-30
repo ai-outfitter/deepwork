@@ -126,6 +126,8 @@ matchers:
     expect(output.content[0].text).toBe("commit ok");
     expect(output.content.at(-1)?.text).toContain("ask_user_question");
     expect(output.content.at(-1)?.text).toContain("/review");
+    expect(output.content.at(-1)?.text).toContain("quick quality check");
+    expect(output.content.at(-1)?.text).not.toContain("recently");
     expect(output.details.deepwork?.postCommitReviewContext).toContain("ask_user_question");
   });
 
@@ -202,6 +204,43 @@ catch_all:
     expect(pi.messages).toEqual([]);
     const output = result as { content: Array<{ type: string; text: string }> };
     expect(output.content.at(-1)?.text).toContain("No re-review needed - all reviews passed for committed files");
+  });
+
+  // Covers PI-REQ-001.10.2 through PI-REQ-001.10.5 by avoiding prompts for deleted files that the normal /review path cannot inspect.
+  it("appends all-passed context for deletion-only commits", async () => {
+    const project = await makeProject();
+    await writeFile(join(project, ".deepreview"), `typescript_rule:
+  description: TypeScript review
+  match:
+    include:
+      - "src/**/*.ts"
+  review:
+    strategy: individual
+    instructions: Check TypeScript carefully.
+`);
+    await git(project, ["init"]);
+    await git(project, ["add", ".deepreview"]);
+    await git(project, ["commit", "-m", "add review rules"]);
+    await writeFile(join(project, "src", "removed.ts"), "export const removed = true;\n");
+    await git(project, ["add", "src/removed.ts"]);
+    await git(project, ["commit", "-m", "add removed file"]);
+    await git(project, ["rm", "src/removed.ts"]);
+    await git(project, ["commit", "-m", "remove file"]);
+    const pi = createPiHarness();
+    deepworkPi(pi.api);
+
+    const result = await pi.handlers.tool_result?.({
+      toolName: "bash",
+      input: { command: "git commit -m remove" },
+      content: [],
+      details: { exit_code: 0 },
+    }, ctx(project));
+
+    expect(parseReviewTasks(await getReviewInstructions({}, { cwd: project }))).toHaveLength(0);
+    expect(pi.messages).toEqual([]);
+    const output = result as { content: Array<{ type: string; text: string }>; details: { deepwork?: { postCommitReviewContext?: string } } };
+    expect(output.content.at(-1)?.text).toContain("No re-review needed - all reviews passed for committed files");
+    expect(output.details.deepwork?.postCommitReviewContext).toContain("No re-review needed");
   });
 
   // Covers PI-REQ-001.10.5 and PI-REQ-002.9.13 by appending all-passed context when committed-file reviews have pass markers.

@@ -97,10 +97,10 @@ This requirement file was copied and adapted from `deep-work/doc/specs/deepwork/
 ### PI-REQ-001.10: Post-Commit Review Reminder
 
 1. The extension MUST observe Pi tool results for Bash or shell commands.
-2. When a `git commit` command succeeds, the extension MUST inspect only the files in `HEAD`'s commit when deciding post-commit review context.
+2. When a `git commit` command succeeds, the extension MUST inspect only reviewable files in `HEAD`'s commit when deciding post-commit review context, using the same added/copied/modified/renamed file scope as the normal review path.
 3. The post-commit review check MUST match committed files against change-cycle review rules using explicit-file semantics, including exclusion of catch-all rules.
-4. If any committed-file review lacks a `.passed` marker, the extension MUST add context instructing the agent to ask the user whether they want to run `/review` for the committed changes.
-5. If every committed-file review has already been marked as passed, or no non-catch-all review rule matches the committed files, the extension MUST add "No re-review needed - all reviews passed for committed files" context.
+4. If any committed-file review lacks a `.passed` marker, the extension MUST add context instructing the agent to ask the user whether they want to run `/review` as a quick optional quality check for the committed changes.
+5. If every committed-file review has already been marked as passed, or no non-catch-all review rule matches the reviewable committed files, the extension MUST add "No re-review needed - all reviews passed for committed files" context.
 6. If last-commit file inspection or review checking fails after a successful `git commit`, the extension MUST fall back to the ask-user review reminder.
 7. The post-commit reminder MUST be delivered through Pi-native tool-result augmentation rather than follow-up turns, automatic review runs, commit blocks, or Pi session state.
 
